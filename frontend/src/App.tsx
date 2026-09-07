@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
+import ClientProfilePanel from "./components/ClientProfilePanel";
 
 import "./App.css";
 
@@ -34,21 +35,15 @@ function App() {
   const [isSessionLoading, setIsSessionLoading] =
     useState(Boolean(accessToken));
 
-  useEffect(() => {
-    if (!accessToken) {
-      setUser(null);
-      setIsSessionLoading(false);
-      return;
-    }
+    useEffect(() => {
+    if (!accessToken) return;
 
     let isActive = true;
+    const token = accessToken;
 
     async function loadCurrentUser() {
-      setIsSessionLoading(true);
-
       try {
-        const currentUser =
-          await getCurrentUser(accessToken as string);
+        const currentUser = await getCurrentUser(token);
 
         if (isActive) {
           setUser(currentUser);
@@ -59,7 +54,7 @@ function App() {
           setAccessToken(null);
           setUser(null);
           setError(
-            "Tu sesión venció. Inicia sesión nuevamente.",
+            "No fue posible validar tu sesión. Inicia sesión nuevamente.",
           );
         }
       } finally {
@@ -69,7 +64,7 @@ function App() {
       }
     }
 
-    loadCurrentUser();
+    void loadCurrentUser();
 
     return () => {
       isActive = false;
@@ -116,7 +111,7 @@ function App() {
         TOKEN_KEY,
         token.access_token,
       );
-
+      setIsSessionLoading(true);
       setAccessToken(token.access_token);
       setPassword("");
       setConfirmPassword("");
@@ -140,6 +135,7 @@ function App() {
     setConfirmPassword("");
     setError("");
     setMode("login");
+    setIsSessionLoading(false);
   }
 
   if (isSessionLoading) {
@@ -230,6 +226,12 @@ function App() {
               </div>
             </dl>
           </article>
+           {user.role === "client" && accessToken && (
+          <ClientProfilePanel
+            token={accessToken}
+            onSessionExpired={logout}
+          />
+        )}
         </section>
       </main>
     );

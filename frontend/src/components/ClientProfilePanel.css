@@ -1,0 +1,112 @@
+.client-panel {
+  width: 100%;
+  min-width: 0;
+  grid-column: 1 / -1;
+  margin-top: 24px;
+  padding: clamp(16px, 3vw, 32px);
+  background: #fff;
+  color: #172b36;
+  border: 1px solid #dce5e9;
+  border-radius: 20px;
+}
+
+.client-panel form {
+  margin-bottom: 32px;
+}
+
+.client-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.client-grid label {
+  display: grid;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.client-grid input,
+.client-grid select,
+.client-grid textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #aebfc8;
+  border-radius: 8px;
+  background: white;
+  color: #172b36;
+  font: inherit;
+}
+
+.client-grid textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.client-wide {
+  grid-column: 1 / -1;
+}
+
+.client-panel button {
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 8px;
+  background: #145c52;
+  color: white;
+  font: inherit;
+  cursor: pointer;
+}
+
+.client-panel button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.client-panel :focus-visible {
+  outline: 3px solid #317ec4;
+  outline-offset: 3px;
+}
+
+.client-error {
+  padding: 12px;
+  background: #fff0ef;
+  color: #9e2525;
+}
+
+.client-notice {
+  padding: 12px;
+  background: #eaf7f0;
+  color: #185c3c;
+}
+
+.client-table {
+  overflow-x: auto;
+}
+
+.client-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.client-table th,
+.client-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #dce5e9;
+}
+
+.client-table caption {
+  text-align: left;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 640px) {
+  .client-grid {
+    grid-template-columns: 1fr;
+  }
+}
