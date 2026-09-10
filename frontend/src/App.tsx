@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import ClientProfilePanel from "./components/ClientProfilePanel";
+import ManagementPanel from "./components/ManagementPanel";
 
 import "./App.css";
 
@@ -232,6 +233,15 @@ function App() {
             onSessionExpired={logout}
           />
         )}
+
+            {(user.role === "admin" || user.role === "coach") &&
+          accessToken && (
+            <ManagementPanel
+              key={`${user.id}-${accessToken}`}
+              token={accessToken}
+              role={user.role}
+            />
+          )}
         </section>
       </main>
     );
