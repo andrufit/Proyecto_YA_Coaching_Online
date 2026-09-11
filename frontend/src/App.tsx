@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import ClientProfilePanel from "./components/ClientProfilePanel";
 import ManagementPanel from "./components/ManagementPanel";
+import TrainingPlanPanel from "./components/TrainingPlanPanel";
 
 import "./App.css";
 
@@ -228,11 +229,15 @@ function App() {
             </dl>
           </article>
            {user.role === "client" && accessToken && (
-          <ClientProfilePanel
-            token={accessToken}
-            onSessionExpired={logout}
-          />
-        )}
+  <>
+    <ClientProfilePanel
+      token={accessToken}
+      onSessionExpired={logout}
+    />
+
+    <TrainingPlanPanel token={accessToken} />
+  </>
+)}
 
             {(user.role === "admin" || user.role === "coach") &&
           accessToken && (

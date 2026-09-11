@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
+import TrainingPlanPanel from "./TrainingPlanPanel";
 
 import type { User } from "../types/auth";
 import type {
@@ -488,11 +489,18 @@ export default function ManagementPanel({ token, role }: Props) {
                 coaches={coaches}
               />
             ) : (
-              <CoachDetails
-                key={`${token}-${selectedClient.id}`}
-                token={token}
-                client={selectedClient}
-              />
+              <>
+  <CoachDetails
+    key={`${token}-${selectedClient.id}`}
+    token={token}
+    client={selectedClient}
+  />
+
+  <TrainingPlanPanel
+    token={token}
+    clientId={selectedClient.id}
+  />
+</>
             )
           )}
         </>

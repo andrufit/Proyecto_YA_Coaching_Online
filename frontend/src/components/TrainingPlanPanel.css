@@ -1,0 +1,140 @@
+.training-panel {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  margin-top: 24px;
+  padding: 24px;
+  border: 1px solid #dce5df;
+  border-radius: 16px;
+  background: #fff;
+  color: #20362a;
+}
+
+.training-panel h2,
+.training-panel h3,
+.training-panel h4 {
+  margin-top: 0;
+}
+
+.training-panel form,
+.training-panel fieldset {
+  min-width: 0;
+}
+
+.training-panel fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.training-panel label {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 14px;
+  font-weight: 600;
+}
+
+.training-panel input,
+.training-panel textarea {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #b8c8be;
+  border-radius: 8px;
+  background: #fff;
+  color: #20362a;
+  font: inherit;
+}
+
+.training-panel textarea {
+  resize: vertical;
+}
+
+.training-panel input:focus,
+.training-panel textarea:focus,
+.training-panel button:focus-visible {
+  outline: 2px solid #26764b;
+  outline-offset: 2px;
+}
+
+.training-panel button {
+  width: auto;
+  padding: 10px 16px;
+  border: 1px solid #26764b;
+  border-radius: 8px;
+  background: #26764b;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.training-panel button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.training-day {
+  min-width: 0;
+  margin: 20px 0;
+  padding: 18px;
+  border: 1px solid #dce5df;
+  border-radius: 12px;
+  background: #f6f9f7;
+}
+
+.training-exercise {
+  min-width: 0;
+  margin: 14px 0;
+  padding: 16px;
+  border: 1px solid #e0e7e2;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.training-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.training-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 14px 0;
+}
+
+.training-actions h3 {
+  margin: 0;
+}
+
+.training-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.training-panel [role="alert"] {
+  color: #a32121;
+}
+
+.training-panel [role="status"] {
+  color: #225e3d;
+}
+
+@media (max-width: 640px) {
+  .training-panel {
+    padding: 16px;
+  }
+
+  .training-day,
+  .training-exercise {
+    padding: 12px;
+  }
+
+  .training-grid {
+    grid-template-columns: 1fr;
+  }
+}
