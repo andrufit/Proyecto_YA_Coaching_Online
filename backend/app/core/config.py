@@ -22,6 +22,14 @@ class Settings(BaseSettings):
         le=1440,
     )
 
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_from: str = ""
+    smtp_security: str = "starttls"
+    password_reset_minutes: int = Field(default=20, ge=5, le=60)
+
     model_config = SettingsConfigDict(
         env_file=BACKEND_DIR / ".env",
         env_file_encoding="utf-8",

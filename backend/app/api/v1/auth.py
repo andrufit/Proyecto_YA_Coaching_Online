@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import (
     APIRouter,
+    BackgroundTasks,
     Depends,
     HTTPException,
     status,
@@ -71,8 +72,38 @@ def login(
 
     access_token = create_access_token(
         subject=str(user.id),
+        auth_version=user.auth_version,
     )
 
     return Token(
         access_token=access_token,
     )
+
+# Password recovery uses opaque, expiring, single-use tokens.
+from pydantic import BaseModel, EmailStr, Field
+from app.services.password_reset_service import (
+    GENERIC_MESSAGE, request_reset, reset_password, deliver_reset,
+)
+
+
+class ForgotPasswordInput(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordInput(BaseModel):
+    token: str = Field(min_length=20, max_length=200)
+    password: str = Field(min_length=8, max_length=128)
+
+
+@router.post("/forgot-password")
+def forgot_password(data: ForgotPasswordInput, db: SessionDependency, tasks: BackgroundTasks):
+    delivery = request_reset(db, str(data.email))
+    if delivery is not None:
+        tasks.add_task(deliver_reset, db.get_bind(), *delivery)
+    return {"message": GENERIC_MESSAGE}
+
+
+@router.post("/reset-password")
+def change_forgotten_password(data: ResetPasswordInput, db: SessionDependency):
+    reset_password(db, data.token, data.password)
+    return {"message": "Contraseña actualizada. Inicia sesión con tu nueva contraseña."}

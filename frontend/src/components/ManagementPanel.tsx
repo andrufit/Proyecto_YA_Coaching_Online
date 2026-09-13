@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import TrainingPlanPanel from "./TrainingPlanPanel";
+import NutritionPlanPanel from "./NutritionPlanPanel";
 
 import type { User } from "../types/auth";
 import type {
@@ -325,6 +326,7 @@ function CoachDetails({
 export default function ManagementPanel({ token, role }: Props) {
   const [clients, setClients] = useState<User[]>([]);
   const [coaches, setCoaches] = useState<User[]>([]);
+  const [detailTab, setDetailTab] = useState("profile");
   const [selectedId, setSelectedId] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -490,17 +492,13 @@ export default function ManagementPanel({ token, role }: Props) {
               />
             ) : (
               <>
-  <CoachDetails
-    key={`${token}-${selectedClient.id}`}
-    token={token}
-    client={selectedClient}
-  />
-
-  <TrainingPlanPanel
-    token={token}
-    clientId={selectedClient.id}
-  />
-</>
+                <div className="detail-tabs" aria-label="Información del cliente">
+                  {[["profile", "Perfil y valoraciones"], ["training", "Entrenamiento"], ["nutrition", "Nutrición"]].map(([value,label]) => <button type="button" key={value} aria-pressed={detailTab === value} className={detailTab === value ? "active" : ""} onClick={() => setDetailTab(value)}>{label}</button>)}
+                </div>
+                <div hidden={detailTab !== "profile"}><CoachDetails key={`${token}-${selectedClient.id}`} token={token} client={selectedClient} /></div>
+                <div hidden={detailTab !== "training"}><TrainingPlanPanel token={token} clientId={selectedClient.id} /></div>
+                <div hidden={detailTab !== "nutrition"}><NutritionPlanPanel token={token} clientId={selectedClient.id} /></div>
+              </>
             )
           )}
         </>

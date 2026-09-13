@@ -1,0 +1,190 @@
+.nutrition-panel {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  margin-top: 24px;
+  padding: 24px;
+  border: 1px solid #dce5df;
+  border-radius: 16px;
+  background: #fff;
+  color: #24352b;
+  overflow-wrap: anywhere;
+}
+
+.nutrition-panel h2 {
+  margin-top: 0;
+}
+
+.nutrition-panel h3,
+.nutrition-panel h4 {
+  margin: 0 0 12px;
+}
+
+.nutrition-fields {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.nutrition-panel label {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.nutrition-panel input,
+.nutrition-panel textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid #aebfb4;
+  border-radius: 8px;
+  background: #fff;
+  color: #24352b;
+  font: inherit;
+}
+
+.nutrition-panel textarea {
+  resize: vertical;
+}
+
+.nutrition-panel input:focus-visible,
+.nutrition-panel textarea:focus-visible,
+.nutrition-panel button:focus-visible {
+  outline: 3px solid #67b88a;
+  outline-offset: 2px;
+}
+
+.nutrition-meal {
+  min-width: 0;
+  margin: 20px 0;
+  padding: 18px;
+  border: 1px solid #cdded3;
+  border-radius: 12px;
+  background: #f7faf8;
+}
+
+.nutrition-meal legend {
+  padding: 0 8px;
+  font-weight: 700;
+}
+
+.nutrition-food-editor {
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid #dce5df;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.nutrition-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.nutrition-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.nutrition-panel button {
+  width: auto;
+  padding: 10px 16px;
+  border: 1px solid #35774f;
+  border-radius: 8px;
+  background: #fff;
+  color: #245b3a;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nutrition-panel button.nutrition-save {
+  background: #245b3a;
+  color: #fff;
+}
+
+.nutrition-panel button.nutrition-remove {
+  border-color: #b96666;
+  color: #923737;
+}
+
+.nutrition-panel button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.nutrition-food-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nutrition-food-list li {
+  padding: 14px;
+  border: 1px solid #dce5df;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.nutrition-food-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 20px;
+}
+
+.nutrition-text {
+  white-space: pre-wrap;
+}
+
+.nutrition-error {
+  padding: 12px;
+  border-radius: 8px;
+  background: #fff0f0;
+  color: #8a2525;
+}
+
+.nutrition-success {
+  padding: 12px;
+  border-radius: 8px;
+  background: #eaf6ee;
+  color: #245b3a;
+}
+
+.nutrition-updated {
+  color: #53695b;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 640px) {
+  .nutrition-panel {
+    padding: 16px;
+  }
+
+  .nutrition-meal,
+  .nutrition-food-editor {
+    padding: 12px;
+  }
+
+  .nutrition-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .nutrition-actions {
+    flex-direction: column;
+  }
+
+  .nutrition-actions button {
+    width: 100%;
+  }
+}

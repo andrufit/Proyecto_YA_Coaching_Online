@@ -1,8 +1,12 @@
+import Dashboard from "./components/Dashboard";
+import PasswordRecovery from "./components/PasswordRecovery";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import ClientProfilePanel from "./components/ClientProfilePanel";
-import ManagementPanel from "./components/ManagementPanel";
-import TrainingPlanPanel from "./components/TrainingPlanPanel";
+
+
+
+
+
 
 import "./App.css";
 
@@ -20,6 +24,7 @@ const TOKEN_KEY = "ya_access_token";
 
 
 function App() {
+  const [recovery, setRecovery] = useState(() => new URLSearchParams(window.location.hash.slice(1)).has("reset_token"));
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -149,107 +154,12 @@ function App() {
     );
   }
 
-  if (user) {
-    return (
-      <main className="dashboard-shell">
-        <header className="dashboard-header">
-          <div className="brand-inline">
-            <span className="brand-mark">Y&A</span>
+  if (recovery) {
+    return <PasswordRecovery onBack={() => { window.history.replaceState(null, "", window.location.pathname); setRecovery(false); logout(); }} />;
+  }
 
-            <div>
-              <strong>Y&A Coaching Online</strong>
-              <span>Plataforma de seguimiento</span>
-            </div>
-          </div>
-
-          <button
-            className="logout-button"
-            type="button"
-            onClick={logout}
-          >
-            Cerrar sesión
-          </button>
-        </header>
-
-        <section className="dashboard-content">
-          <div className="welcome-copy">
-            <span className="eyebrow">
-              CUENTA AUTENTICADA
-            </span>
-
-            <h1>Bienvenido a tu espacio personal</h1>
-
-            <p>
-              Tu sesión está protegida y el frontend se
-              encuentra conectado correctamente con la API.
-            </p>
-          </div>
-
-          <article className="profile-card">
-            <div className="profile-avatar">
-              {user.email.charAt(0).toUpperCase()}
-            </div>
-
-            <div className="profile-heading">
-              <span>Perfil activo</span>
-              <h2>{user.email}</h2>
-            </div>
-
-            <dl className="profile-details">
-              <div>
-                <dt>Identificador</dt>
-                <dd>#{user.id}</dd>
-              </div>
-
-              <div>
-                <dt>Rol</dt>
-                <dd>{user.role}</dd>
-              </div>
-
-              <div>
-                <dt>Estado</dt>
-                <dd className="active-status">
-                  Activo
-                </dd>
-              </div>
-
-              <div>
-                <dt>Fecha de registro</dt>
-                <dd>
-                  {new Intl.DateTimeFormat(
-                    "es-CO",
-                    {
-                      dateStyle: "long",
-                    },
-                  ).format(
-                    new Date(user.created_at),
-                  )}
-                </dd>
-              </div>
-            </dl>
-          </article>
-           {user.role === "client" && accessToken && (
-  <>
-    <ClientProfilePanel
-      token={accessToken}
-      onSessionExpired={logout}
-    />
-
-    <TrainingPlanPanel token={accessToken} />
-  </>
-)}
-
-            {(user.role === "admin" || user.role === "coach") &&
-          accessToken && (
-            <ManagementPanel
-              key={`${user.id}-${accessToken}`}
-              token={accessToken}
-              role={user.role}
-            />
-          )}
-        </section>
-      </main>
-    );
+  if (user && accessToken) {
+    return <Dashboard key={`${user.id}-${accessToken}`} user={user} token={accessToken} onLogout={logout} />;
   }
 
   return (
@@ -257,7 +167,7 @@ function App() {
       <section className="brand-panel">
         <div className="brand-content">
           <div className="brand-inline brand-light">
-            <span className="brand-mark">Y&A</span>
+            <img className="auth-logo" src="/logo-ya.png" alt="Y&A Fitness Coaching" />
 
             <div>
               <strong>Y&A Coaching Online</strong>
@@ -411,6 +321,7 @@ function App() {
             </button>
           </form>
 
+          <button className="forgot-link" type="button" onClick={() => setRecovery(true)}>¿Olvidaste tu contraseña?</button>
           <p className="privacy-copy">
             Nunca mostraremos ni almacenaremos tu
             contraseña original.

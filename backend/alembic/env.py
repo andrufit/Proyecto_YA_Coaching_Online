@@ -9,12 +9,14 @@ from app.models import (  # noqa: F401
     BodyAssessment,
     ClientProfile,
     CoachAssignment,
+    NutritionFood,
+    NutritionMeal,
+    NutritionPlan,
     TrainingDay,
     TrainingExercise,
     TrainingPlan,
     User,
 )
-
 
 config = context.config
 

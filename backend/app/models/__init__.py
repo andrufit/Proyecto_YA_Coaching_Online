@@ -1,3 +1,4 @@
+from app.models.password_reset import PasswordReset
 from app.models.user import User
 from app.models.client_profile import ClientProfile
 from app.models.body_assessment import BodyAssessment
@@ -7,8 +8,14 @@ from app.models.training_plan import (
     TrainingExercise,
     TrainingPlan,
 )
+from app.models.nutrition_plan import (
+    NutritionFood,
+    NutritionMeal,
+    NutritionPlan,
+)
 
 __all__ = [
+    "PasswordReset",
     "User",
     "ClientProfile",
     "BodyAssessment",
@@ -16,4 +23,7 @@ __all__ = [
     "TrainingPlan",
     "TrainingDay",
     "TrainingExercise",
+    "NutritionPlan",
+    "NutritionMeal",
+    "NutritionFood",
 ]
