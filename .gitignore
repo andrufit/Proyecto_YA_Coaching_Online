@@ -58,3 +58,5 @@ frontend/dist/
 
 # Editor
 .vscode/
+# Respaldos de base de datos
+*.dump
