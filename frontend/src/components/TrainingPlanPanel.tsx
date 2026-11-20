@@ -1,4 +1,9 @@
-import { useEffect, useState } from "react";
+import CatalogNameField from "./CatalogNameField";
+import { exerciseCatalog } from "./PlanCatalogs";
+import FormDialog from "./FormDialog";
+import { revealInvalidField } from "./WorkspaceForms";
+import "./WorkspaceExperience.css";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
 import {
@@ -83,7 +88,14 @@ function TrainingPlanContent({ token, clientId }: Props) {
   const [busy, setBusy] = useState(false);
   const [retry, setRetry] = useState(0);
 
+  const [editing, setEditing] = useState(false);
+  const submitting = useRef(false);
   const canEdit = clientId !== undefined;
+  const dirty = JSON.stringify(draft) !== JSON.stringify(plan ? editablePlan(plan) : emptyPlan());
+  function openEditor() {
+    setDraft(plan ? editablePlan(plan) : emptyPlan());
+    setSaveError(""); setNotice(""); setEditing(true);
+  }
 
   useEffect(() => {
     let active = true;
@@ -176,7 +188,8 @@ function TrainingPlanContent({ token, clientId }: Props) {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (clientId === undefined) return;
+    if (clientId === undefined || submitting.current) return;
+    submitting.current = true;
 
     setBusy(true);
     setSaveError("");
@@ -204,16 +217,20 @@ function TrainingPlanContent({ token, clientId }: Props) {
       setPlan(saved);
       setDraft(editablePlan(saved));
       setNotice("Plan guardado correctamente.");
+      setEditing(false);
     } catch (error) {
       setSaveError(errorMessage(error));
     } finally {
       setBusy(false);
+      submitting.current = false;
     }
   }
 
   return (
     <section className="training-panel">
-      <h2>Plan de entrenamiento</h2>
+      <div className="experience-heading"><div><p className="experience-kicker">ENTRENAMIENTO</p><h2>{canEdit ? "Rutina del cliente" : "Mi entrenamiento"}</h2><p>Consulta cada día y sus ejercicios a tu ritmo.</p></div>
+      {canEdit && !loading && !loadError && <button type="button" onClick={openEditor}>{plan ? "Editar rutina" : "Crear rutina"}</button>}</div>
+      {notice && <p role="status">{notice}</p>}
 
       {loading ? (
         <p role="status">Consultando plan...</p>
@@ -231,8 +248,9 @@ function TrainingPlanContent({ token, clientId }: Props) {
             Reintentar
           </button>
         </div>
-      ) : canEdit ? (
-        <form onSubmit={submit}>
+      ) : canEdit && editing ? (
+        <FormDialog wide title={plan ? "Editar rutina" : "Crear rutina"} description="Organiza los días y abre cada ejercicio para completar sus datos. Guarda el plan al terminar." dirty={dirty} busy={busy} onClose={() => setEditing(false)}>
+        <form onSubmit={submit} onInvalidCapture={revealInvalidField}>
           <p>
             {plan
               ? "Edita el plan actual del cliente."
@@ -274,7 +292,8 @@ function TrainingPlanContent({ token, clientId }: Props) {
             </label>
 
             {draft.days.map((day, dayIndex) => (
-              <div className="training-day" key={day.position}>
+              <details className="training-day experience-group" key={day.position} open>
+                <summary>{day.name || `Día ${dayIndex + 1}`} · {day.exercises.length} ejercicios</summary>
                 <div className="training-actions">
                   <h3>Día {dayIndex + 1}</h3>
                   <button
@@ -300,26 +319,13 @@ function TrainingPlanContent({ token, clientId }: Props) {
                 </label>
 
                 {day.exercises.map((exercise, exerciseIndex) => (
-                  <div
-                    className="training-exercise"
+                  <details
+                    className="training-exercise experience-group"
                     key={exercise.position}
                   >
-                    <h4>Ejercicio {exerciseIndex + 1}</h4>
+                    <summary>{exercise.name || `Nuevo ejercicio ${exerciseIndex + 1}`}</summary>
 
-                    <label>
-                      Nombre del ejercicio
-                      <input
-                        value={exercise.name}
-                        required
-                        minLength={2}
-                        maxLength={150}
-                        onChange={(event) =>
-                          updateExercise(dayIndex, exerciseIndex, {
-                            name: event.target.value,
-                          })
-                        }
-                      />
-                    </label>
+                    <CatalogNameField groups={exerciseCatalog} categoryLabel="Grupo muscular o actividad" itemLabel="Ejercicio" value={exercise.name} onChange={name => updateExercise(dayIndex, exerciseIndex, { name })} />
 
                     <div className="training-grid">
                       <label>
@@ -402,7 +408,7 @@ function TrainingPlanContent({ token, clientId }: Props) {
                     >
                       Quitar ejercicio
                     </button>
-                  </div>
+                  </details>
                 ))}
 
                 <button
@@ -419,7 +425,7 @@ function TrainingPlanContent({ token, clientId }: Props) {
                 >
                   Añadir ejercicio
                 </button>
-              </div>
+              </details>
             ))}
 
             <div className="training-actions">
@@ -441,6 +447,7 @@ function TrainingPlanContent({ token, clientId }: Props) {
           {saveError && <p role="alert">{saveError}</p>}
           {notice && <p role="status">{notice}</p>}
         </form>
+        </FormDialog>
       ) : plan ? (
         <div>
           <h3>{plan.title}</h3>
@@ -450,8 +457,8 @@ function TrainingPlanContent({ token, clientId }: Props) {
           )}
 
           {plan.days.map((day) => (
-            <article className="training-day" key={day.id}>
-              <h3>{day.name}</h3>
+            <details className="training-day experience-group" key={day.id} open={day.position === 1}>
+              <summary>{day.name} · {day.exercises.length} ejercicios</summary>
 
               {day.exercises.map((exercise) => (
                 <div className="training-exercise" key={exercise.id}>
@@ -474,7 +481,7 @@ function TrainingPlanContent({ token, clientId }: Props) {
                   )}
                 </div>
               ))}
-            </article>
+            </details>
           ))}
 
           <p>
@@ -486,7 +493,7 @@ function TrainingPlanContent({ token, clientId }: Props) {
           </p>
         </div>
       ) : (
-        <p>Tu entrenador todavía no ha registrado un plan para ti.</p>
+        <div className="experience-empty"><h3>{canEdit ? "Una rutina para empezar" : "Tu rutina está en preparación"}</h3><p>{canEdit ? "Crea el plan con los días, ejercicios e indicaciones del cliente." : "Aquí aparecerán los días y ejercicios cuando tu entrenador guarde tu plan."}</p></div>
       )}
     </section>
   );

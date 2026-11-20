@@ -1,159 +1,16 @@
+import "./WorkspaceExperience.css";
 import { useEffect, useState } from "react";
-import type { FormEvent } from "react";
 import TrainingPlanPanel from "./TrainingPlanPanel";
 import NutritionPlanPanel from "./NutritionPlanPanel";
-
+import AdminManagementPanel from "./AdminManagementPanel";
 import type { User } from "../types/auth";
-import type {
-  BodyAssessment,
-  ClientProfile,
-} from "../services/clientProfile";
-import {
-  createCoach,
-  getAssignment,
-  getCoachAssessments,
-  getCoachProfile,
-  getUsers,
-  saveAssignment,
-} from "../services/management";
-
+import type { BodyAssessment, ClientProfile } from "../services/clientProfile";
+import { getCoachAssessments, getCoachProfile, getUsers } from "../services/management";
 import "./ManagementPanel.css";
 
-type Props = {
-  token: string;
-  role: "admin" | "coach";
-};
-
 function message(error: unknown): string {
-  return error instanceof Error
-    ? error.message
-    : "No fue posible completar la operación.";
+  return error instanceof Error ? error.message : "No fue posible completar la operación.";
 }
-
-function AssignmentEditor({
-  token,
-  client,
-  coaches,
-}: {
-  token: string;
-  client: User;
-  coaches: User[];
-}) {
-  const [coachId, setCoachId] = useState("");
-  const [currentCoachId, setCurrentCoachId] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-  const [retry, setRetry] = useState(0);
-
-  useEffect(() => {
-    let active = true;
-
-    async function load() {
-      try {
-        const assignment = await getAssignment(token, client.id);
-        if (!active) return;
-
-        setCurrentCoachId(assignment?.coach_id ?? null);
-        setCoachId(assignment ? String(assignment.coach_id) : "");
-      } catch (requestError) {
-        if (active) setError(message(requestError));
-      } finally {
-        if (active) setLoading(false);
-      }
-    }
-
-    void load();
-    return () => { active = false; };
-  }, [token, client.id, retry]);
-
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!coachId) return;
-
-    setBusy(true);
-    setError("");
-    setNotice("");
-
-    try {
-      const saved = await saveAssignment(token, client.id, Number(coachId));
-      setCurrentCoachId(saved.coach_id);
-      setNotice("Entrenador asignado correctamente.");
-    } catch (requestError) {
-      setError(message(requestError));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  if (loading) return <p role="status">Consultando asignación...</p>;
-
-  const currentCoach = coaches.find((item) => item.id === currentCoachId);
-
-  return (
-    <form onSubmit={submit}>
-      <h3>Entrenador de {client.email}</h3>
-
-      <p>
-        Asignación actual:{" "}
-        {currentCoach
-          ? currentCoach.email
-          : currentCoachId
-            ? `Entrenador #${currentCoachId}`
-            : "Sin entrenador asignado"}
-      </p>
-
-      {error && (
-        <div role="alert">
-          <p>{error}</p>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => {
-              setError("");
-              setLoading(true);
-              setRetry((value) => value + 1);
-            }}
-          >
-            Consultar nuevamente
-          </button>
-        </div>
-      )}
-
-      {notice && <p role="status">{notice}</p>}
-
-      <fieldset disabled={busy || !client.is_active || Boolean(error)}>
-        <label>
-          Seleccionar entrenador
-          <select
-            value={coachId}
-            required
-            onChange={(event) => setCoachId(event.target.value)}
-          >
-            <option value="">Selecciona un entrenador</option>
-            {coaches.map((coach) => (
-              <option
-                key={coach.id}
-                value={coach.id}
-                disabled={!coach.is_active}
-              >
-                {coach.email}{!coach.is_active ? " (inactivo)" : ""}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <button type="submit" disabled={!coachId}>
-          {busy ? "Guardando..." : "Guardar asignación"}
-        </button>
-      </fieldset>
-
-      {!client.is_active && <p>Este cliente está desactivado.</p>}
-    </form>
-  );
-}
-
 function CoachDetails({
   token,
   client,
@@ -323,186 +180,48 @@ function CoachDetails({
   );
 }
 
-export default function ManagementPanel({ token, role }: Props) {
+function CoachManagementPanel({ token }: { token: string }) {
   const [clients, setClients] = useState<User[]>([]);
-  const [coaches, setCoaches] = useState<User[]>([]);
-  const [detailTab, setDetailTab] = useState("profile");
   const [selectedId, setSelectedId] = useState("");
+  const [query, setQuery] = useState("");
+  const [detailTab, setDetailTab] = useState("profile");
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
-  const [loadError, setLoadError] = useState("");
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
   const [reload, setReload] = useState(0);
-
   useEffect(() => {
     let active = true;
-
-    async function load() {
-      try {
-        const [nextClients, nextCoaches] = await Promise.all([
-          getUsers(
-            token,
-            role === "admin" ? "/admin/clients" : "/coach/clients",
-          ),
-          role === "admin"
-            ? getUsers(token, "/admin/coaches")
-            : Promise.resolve([] as User[]),
-        ]);
-
-        if (active) {
-          setClients(nextClients);
-          setCoaches(nextCoaches);
-        }
-      } catch (requestError) {
-        if (active) setLoadError(message(requestError));
-      } finally {
-        if (active) setLoading(false);
-      }
-    }
-
-    void load();
+    void getUsers(token, "/coach/clients")
+      .then(users => { if (active) setClients(users); })
+      .catch(failure => { if (active) setError(message(failure)); })
+      .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [token, role, reload]);
+  }, [token, reload]);
+  const selectedClient = clients.find(client => String(client.id) === selectedId);
+  const visible = clients.filter(client => client.email.toLowerCase().includes(query.trim().toLowerCase()));
+  return <section className="management-panel experience-coach">
+    <div className="experience-heading"><div><p className="experience-kicker">ESPACIO DEL ENTRENADOR</p><h2>{selectedClient ? "Ficha del cliente" : "Mis clientes"}</h2><p>{selectedClient ? selectedClient.email : `${clients.length} clientes asignados · Elige una ficha para preparar sus planes.`}</p></div>
+    {selectedClient ? <button type="button" onClick={() => setSelectedId("")}>Volver a mis clientes</button> : <button type="button" disabled={loading} onClick={() => {
+      setError(""); setLoading(true); setReload(value => value + 1);
+    }}>Actualizar lista</button>}</div>
+    {loading ? <p role="status">Cargando clientes...</p> : error ? <p role="alert">{error}</p> : <>
+      {!selectedClient && <><label className="experience-search">Buscar cliente por correo<input type="search" value={query} placeholder="Escribe el correo del cliente" onChange={event => setQuery(event.target.value)} /></label>
+      {!clients.length ? <div className="experience-empty"><h3>Tu próximo acompañamiento empieza aquí</h3><p>Los clientes aparecerán cuando el administrador te los asigne.</p></div> : !visible.length ? <p role="status">No encontramos clientes con ese correo.</p> : <div className="experience-client-grid">{visible.map(client => <article className="experience-client-card" key={client.id}>
+        <span className="avatar" aria-hidden="true">{client.email.slice(0, 2).toUpperCase()}</span><h3>{client.email}</h3><p>{client.is_active ? "Cuenta activa" : "Cuenta inactiva"}</p>
+        <button type="button" onClick={() => { setSelectedId(String(client.id)); setDetailTab("profile"); }}>Abrir ficha<span className="experience-sr-only"> de {client.email}</span></button>
+      </article>)}</div>}</>}
+      {selectedClient && <div key={selectedClient.id}>
+        <div className="detail-tabs" aria-label="Información del cliente">
+          {[["profile", "Perfil y progreso"], ["training", "Entrenamiento"], ["nutrition", "Alimentación"]].map(([value, label]) =>
+            <button type="button" key={value} aria-pressed={detailTab === value} className={detailTab === value ? "active" : ""} onClick={() => setDetailTab(value)}>{label}</button>)}
+        </div>
+        <div hidden={detailTab !== "profile"}><CoachDetails token={token} client={selectedClient} /></div>
+        <div hidden={detailTab !== "training"}><TrainingPlanPanel token={token} clientId={selectedClient.id} /></div>
+        <div hidden={detailTab !== "nutrition"}><NutritionPlanPanel token={token} clientId={selectedClient.id} /></div>
+      </div>}
+    </>}
+  </section>;
+}
 
-  async function submitCoach(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const data = new FormData(form);
-
-    setBusy(true);
-    setError("");
-    setNotice("");
-
-    try {
-      const coach = await createCoach(
-        token,
-        String(data.get("email") ?? "").trim(),
-        String(data.get("password") ?? ""),
-      );
-
-      setCoaches((previous) => [...previous, coach]);
-      form.reset();
-      setNotice(`Entrenador creado: ${coach.email}`);
-    } catch (requestError) {
-      setError(message(requestError));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const selectedClient = clients.find(
-    (client) => String(client.id) === selectedId,
-  );
-
-  return (
-    <section className="management-panel">
-      <h2>
-        {role === "admin" ? "Administración" : "Mis clientes"}
-      </h2>
-
-      <button
-        type="button"
-        disabled={loading || busy}
-        onClick={() => {
-          setSelectedId("");
-          setLoadError("");
-          setLoading(true);
-          setReload((value) => value + 1);
-        }}
-      >
-        Actualizar lista
-      </button>
-
-      {loading ? (
-        <p role="status">Cargando cuentas...</p>
-      ) : loadError ? (
-        <p role="alert">{loadError}</p>
-      ) : (
-        <>
-          {role === "admin" && (
-            <form onSubmit={submitCoach}>
-              <h3>Crear entrenador</h3>
-
-              <fieldset disabled={busy}>
-                <label>
-                  Correo del entrenador
-                  <input name="email" type="email" required />
-                </label>
-
-                <label>
-                  Contraseña inicial
-                  <input
-                    name="password"
-                    type="password"
-                    autoComplete="new-password"
-                    minLength={8}
-                    maxLength={128}
-                    required
-                  />
-                </label>
-
-                <button type="submit">
-                  {busy ? "Creando..." : "Crear entrenador"}
-                </button>
-              </fieldset>
-
-              {error && <p role="alert">{error}</p>}
-              {notice && <p role="status">{notice}</p>}
-            </form>
-          )}
-
-          <h3>
-            {role === "admin"
-              ? "Asignar o cambiar entrenador"
-              : "Consultar cliente"}
-          </h3>
-
-          {clients.length === 0 ? (
-            <p>
-              {role === "admin"
-                ? "Todavía no hay clientes registrados."
-                : "Todavía no tienes clientes activos asignados."}
-            </p>
-          ) : (
-            <label>
-              Cliente
-              <select
-                value={selectedId}
-                onChange={(event) => setSelectedId(event.target.value)}
-              >
-                <option value="">Selecciona un cliente</option>
-                {clients.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.email}
-                    {!client.is_active ? " (inactivo)" : ""}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-
-          {selectedClient && (
-            role === "admin" ? (
-              <AssignmentEditor
-                key={`${token}-${selectedClient.id}`}
-                token={token}
-                client={selectedClient}
-                coaches={coaches}
-              />
-            ) : (
-              <>
-                <div className="detail-tabs" aria-label="Información del cliente">
-                  {[["profile", "Perfil y valoraciones"], ["training", "Entrenamiento"], ["nutrition", "Nutrición"]].map(([value,label]) => <button type="button" key={value} aria-pressed={detailTab === value} className={detailTab === value ? "active" : ""} onClick={() => setDetailTab(value)}>{label}</button>)}
-                </div>
-                <div hidden={detailTab !== "profile"}><CoachDetails key={`${token}-${selectedClient.id}`} token={token} client={selectedClient} /></div>
-                <div hidden={detailTab !== "training"}><TrainingPlanPanel token={token} clientId={selectedClient.id} /></div>
-                <div hidden={detailTab !== "nutrition"}><NutritionPlanPanel token={token} clientId={selectedClient.id} /></div>
-              </>
-            )
-          )}
-        </>
-      )}
-    </section>
-  );
+export default function ManagementPanel({ token, role }: { token: string; role: "admin" | "coach" }) {
+  return role === "admin" ? <AdminManagementPanel token={token} /> : <CoachManagementPanel token={token} />;
 }
