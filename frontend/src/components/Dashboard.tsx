@@ -67,7 +67,7 @@ export default function Dashboard({ user, token, onLogout }: { user: User; token
         <div className="top-account"><span className="avatar">{user.email.slice(0,2).toUpperCase()}</span><div><strong>{user.email}</strong><small>{role}</small></div></div>
       </header>
       <main id="main-content" className="main-content">
-        <div className="page-heading"><div><p className="eyebrow">{new Intl.DateTimeFormat("es-CO", { weekday: "long", day: "numeric", month: "long" }).format(new Date())}</p><h1>{page === "home" ? "Tu progreso empieza aquí" : title(page)}</h1><p>Tu entrenamiento, alimentación y seguimiento. Todo en un lugar.</p></div><span className="role-badge">{role}</span></div>
+        <div className="page-heading"><div><p className="eyebrow">{new Intl.DateTimeFormat("es-CO", { weekday: "long", day: "numeric", month: "long" }).format(new Date())}</p><h1>{page === "home" ? (user.role === "admin" ? "Tu equipo y tus clientes" : user.role === "coach" ? "Acompaña el progreso de tus clientes" : "Tu progreso empieza aquí") : title(page)}</h1><p>{user.role === "admin" ? "Organiza las cuentas y asigna el acompañamiento de cada cliente." : user.role === "coach" ? "Consulta el progreso y prepara los planes de tus clientes asignados." : "Tu entrenamiento, alimentación y seguimiento. Todo en un lugar."}</p></div><span className="role-badge">{role}</span></div>
         {page === "home" && <Overview user={user} token={token} navigate={navigate} />}
         <div hidden={page !== "profile"}>{user.role === "client" && page === "profile" && <ClientProfilePanel token={token} onSessionExpired={onLogout} />}</div>
         {page === "training" && user.role === "client" && <TrainingPlanPanel token={token} />}

@@ -1,4 +1,9 @@
-import { useEffect, useState } from "react";
+import CatalogNameField from "./CatalogNameField";
+import { foodCatalog } from "./PlanCatalogs";
+import FormDialog from "./FormDialog";
+import { revealInvalidField } from "./WorkspaceForms";
+import "./WorkspaceExperience.css";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
 import {
@@ -92,7 +97,14 @@ function NutritionPlanContent({ token, clientId }: Props) {
   const [notice, setNotice] = useState("");
   const [retry, setRetry] = useState(0);
 
+  const [editing, setEditing] = useState(false);
+  const submitting = useRef(false);
   const canEdit = clientId !== undefined;
+  const dirty = JSON.stringify(draft) !== JSON.stringify(plan ? editablePlan(plan) : emptyPlan());
+  function openEditor() {
+    setDraft(plan ? editablePlan(plan) : emptyPlan());
+    setSaveError(""); setNotice(""); setEditing(true);
+  }
 
   useEffect(() => {
     let active = true;
@@ -181,7 +193,8 @@ function NutritionPlanContent({ token, clientId }: Props) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (clientId === undefined || busy) return;
+    if (clientId === undefined || submitting.current) return;
+    submitting.current = true;
 
     setBusy(true);
     setSaveError("");
@@ -208,10 +221,12 @@ function NutritionPlanContent({ token, clientId }: Props) {
       setPlan(saved);
       setDraft(editablePlan(saved));
       setNotice("Plan nutricional guardado correctamente.");
+      setEditing(false);
     } catch (error) {
       setSaveError(errorMessage(error));
     } finally {
       setBusy(false);
+      submitting.current = false;
     }
   }
 
@@ -245,13 +260,15 @@ function NutritionPlanContent({ token, clientId }: Props) {
     );
   }
 
-  if (!canEdit) {
+  if (!canEdit || !editing) {
     return (
       <section className="nutrition-panel">
-        <h2>Mi plan nutricional</h2>
+        <div className="experience-heading"><div><p className="experience-kicker">ALIMENTACIÓN</p><h2>{canEdit ? "Alimentación del cliente" : "Mi alimentación"}</h2><p>Tus comidas, cantidades e indicaciones en un solo lugar.</p></div>
+        {canEdit && <button type="button" onClick={openEditor}>{plan ? "Editar alimentación" : "Crear alimentación"}</button>}</div>
+        {notice && <p role="status">{notice}</p>}
 
         {!plan ? (
-          <p>Tu entrenador todavía no ha registrado tu plan nutricional.</p>
+          <div className="experience-empty"><h3>{canEdit ? "Organiza el primer plan" : "Tu alimentación está en preparación"}</h3><p>{canEdit ? "Agrega comidas, alimentos y cantidades para este cliente." : "Las comidas y cantidades aparecerán cuando tu entrenador guarde el plan."}</p></div>
         ) : (
           <>
             <h3>{plan.title}</h3>
@@ -261,10 +278,8 @@ function NutritionPlanContent({ token, clientId }: Props) {
             )}
 
             {plan.meals.map((meal) => (
-              <article className="nutrition-meal" key={meal.id}>
-                <h3>
-                  {meal.position}. {meal.name}
-                </h3>
+              <details className="nutrition-meal experience-group" key={meal.id} open={meal.position === 1}>
+                <summary>{meal.position}. {meal.name} · {meal.foods.length} alimentos</summary>
 
                 {meal.notes && (
                   <p className="nutrition-text">{meal.notes}</p>
@@ -284,7 +299,7 @@ function NutritionPlanContent({ token, clientId }: Props) {
                     </li>
                   ))}
                 </ul>
-              </article>
+              </details>
             ))}
 
             <p className="nutrition-updated">
@@ -305,7 +320,8 @@ function NutritionPlanContent({ token, clientId }: Props) {
       <h2>{plan ? "Editar plan nutricional" : "Crear plan nutricional"}</h2>
       <p>Organiza las comidas, los alimentos y sus cantidades.</p>
 
-      <form onSubmit={submit}>
+      <FormDialog wide title={plan ? "Editar alimentación" : "Crear alimentación"} description="Organiza cada comida y sus alimentos. Guarda el plan completo al terminar." dirty={dirty} busy={busy} onClose={() => setEditing(false)}>
+      <form onSubmit={submit} onInvalidCapture={revealInvalidField}>
         <fieldset disabled={busy} className="nutrition-fields">
           <label>
             Título del plan
@@ -337,8 +353,8 @@ function NutritionPlanContent({ token, clientId }: Props) {
           </label>
 
           {draft.meals.map((meal, mealIndex) => (
-            <fieldset className="nutrition-meal" key={mealIndex}>
-              <legend>Comida {mealIndex + 1}</legend>
+            <details className="nutrition-meal experience-group" key={mealIndex} open>
+              <summary>{meal.name || `Comida ${mealIndex + 1}`} · {meal.foods.length} alimentos</summary>
 
               <label>
                 Nombre de la comida
@@ -367,25 +383,11 @@ function NutritionPlanContent({ token, clientId }: Props) {
               </label>
 
               {meal.foods.map((food, foodIndex) => (
-                <div className="nutrition-food-editor" key={foodIndex}>
-                  <h4>Alimento {foodIndex + 1}</h4>
+                <details className="nutrition-food-editor experience-group" key={foodIndex}>
+                  <summary>{food.name || `Nuevo alimento ${foodIndex + 1}`}</summary>
 
                   <div className="nutrition-grid">
-                    <label>
-                      Alimento
-                      <input
-                        value={food.name}
-                        minLength={2}
-                        maxLength={150}
-                        required
-                        placeholder="Ejemplo: Arroz"
-                        onChange={(event) =>
-                          updateFood(mealIndex, foodIndex, {
-                            name: event.target.value,
-                          })
-                        }
-                      />
-                    </label>
+                    <CatalogNameField groups={foodCatalog} categoryLabel="Categoría de alimento" itemLabel="Alimento" value={food.name} onChange={name => updateFood(mealIndex, foodIndex, { name })} />
 
                     <label>
                       Cantidad
@@ -425,7 +427,7 @@ function NutritionPlanContent({ token, clientId }: Props) {
                   >
                     Quitar alimento
                   </button>
-                </div>
+                </details>
               ))}
 
               <div className="nutrition-actions">
@@ -453,7 +455,7 @@ function NutritionPlanContent({ token, clientId }: Props) {
                   Quitar comida
                 </button>
               </div>
-            </fieldset>
+            </details>
           ))}
 
           <div className="nutrition-actions">
@@ -491,6 +493,7 @@ function NutritionPlanContent({ token, clientId }: Props) {
           </p>
         )}
       </form>
+      </FormDialog>
     </section>
   );
 }

@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import FormDialog from "./FormDialog";
+import "./WorkspaceExperience.css";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
 import {
@@ -47,6 +49,12 @@ export default function ClientProfilePanel({
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [reload, setReload] = useState(0);
+  const [editor, setEditor] = useState<"profile" | "assessment" | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const submitting = useRef(false);
+  function openEditor(value: "profile" | "assessment") {
+    setError(""); setNotice(""); setDirty(false); setEditor(value);
+  }
 
   useEffect(() => {
     let active = true;
@@ -89,6 +97,7 @@ export default function ClientProfilePanel({
 
   async function handleProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting.current) return;
     const form = new FormData(event.currentTarget);
     const fullName = field(form, "full_name").replace(/\s+/g, " ");
 
@@ -110,6 +119,7 @@ export default function ClientProfilePanel({
       medical_restrictions: optionalField(form, "medical_restrictions"),
     };
 
+    submitting.current = true;
     setBusy(true);
     setError("");
     setNotice("");
@@ -118,18 +128,22 @@ export default function ClientProfilePanel({
       const saved = await saveProfile(token, data, profile !== null);
       setProfile(saved);
       setNotice("Perfil guardado correctamente.");
+      setDirty(false); setEditor(null);
     } catch (requestError) {
       handleError(requestError);
     } finally {
+      submitting.current = false;
       setBusy(false);
     }
   }
 
   async function handleAssessment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting.current) return;
     const element = event.currentTarget;
     const form = new FormData(element);
 
+    submitting.current = true;
     setBusy(true);
     setError("");
     setNotice("");
@@ -152,10 +166,12 @@ export default function ClientProfilePanel({
         ),
       );
       element.reset();
+      setDirty(false); setEditor(null);
       setNotice("Valoración registrada correctamente.");
     } catch (requestError) {
       handleError(requestError);
     } finally {
+      submitting.current = false;
       setBusy(false);
     }
   }
@@ -178,12 +194,23 @@ export default function ClientProfilePanel({
 
   return (
     <section className="client-panel">
-      <h2>Mi perfil y seguimiento</h2>
+      <div className="experience-heading"><div><p className="experience-kicker">MI PROGRESO</p><h2>Mi perfil y seguimiento</h2><p>Tu punto de partida y cada avance, en un solo lugar.</p></div></div>
+      <div className="experience-summary-grid">
+        <article className="experience-summary"><span>Mi perfil</span><h3>{profile?.full_name || "Completa tu perfil"}</h3><p>{profile ? `${profile.height_cm} cm de estatura` : "Comparte tus datos y objetivos con tu entrenador."}</p><button type="button" onClick={() => openEditor("profile")}>{profile ? "Editar mi perfil" : "Completar mi perfil"}</button></article>
+        <article className="experience-summary"><span>Último peso registrado</span><h3>{assessments.length ? `${assessments[0].weight_kg} kg` : "Sin registro"}</h3><p>{assessments.length ? assessments[0].assessment_date.split("-").reverse().join("/") : "Registra tus medidas para consultar tu evolución."}</p><button type="button" disabled={!profile} onClick={() => openEditor("assessment")}>Registrar medidas</button>{!profile && <small>Completa primero tu perfil.</small>}</article>
+      </div>
+      {profile && <dl className="management-details experience-summary">
+        <div><dt>Objetivo</dt><dd>{{fat_loss: "Pérdida de grasa", muscle_gain: "Ganancia muscular", maintenance: "Mantenimiento", performance: "Rendimiento"}[profile.goal]}</dd></div>
+        <div><dt>Nivel</dt><dd>{{beginner: "Principiante", intermediate: "Intermedio", advanced: "Avanzado"}[profile.training_level]}</dd></div>
+        <div><dt>Restricciones médicas</dt><dd>{profile.medical_restrictions || "Sin información registrada"}</dd></div>
+      </dl>}
 
       {error && <p className="client-error" role="alert">{error}</p>}
       {notice && <p className="client-notice" role="status">{notice}</p>}
 
-      <form onSubmit={handleProfile} key={profile?.id ?? "new"}>
+      {editor === "profile" && <FormDialog wide title={profile ? "Editar mi perfil" : "Completar mi perfil"} description="Actualiza tus datos, objetivo y nivel de entrenamiento." dirty={dirty} busy={busy} onClose={() => setEditor(null)}>
+      {error && <p role="alert">{error}</p>}
+      <form onSubmit={handleProfile} onChange={() => setDirty(true)} key={profile?.id ?? "new"}>
         <h3>{profile ? "Editar mi perfil" : "Completar mi perfil"}</h3>
 
         <fieldset disabled={busy} className="client-grid">
@@ -269,10 +296,13 @@ export default function ClientProfilePanel({
           </button>
         </fieldset>
       </form>
+      </FormDialog>}
 
       {profile && (
         <>
-          <form onSubmit={handleAssessment}>
+          {editor === "assessment" && <FormDialog wide title="Registrar medidas" description="Solo el peso es obligatorio. Completa las medidas que tengas disponibles." dirty={dirty} busy={busy} onClose={() => setEditor(null)}>
+          {error && <p role="alert">{error}</p>}
+          <form onSubmit={handleAssessment} onChange={() => setDirty(true)}>
             <h3>Registrar valoración de hoy</h3>
 
             <fieldset disabled={busy} className="client-grid">
@@ -326,6 +356,7 @@ export default function ClientProfilePanel({
               </button>
             </fieldset>
           </form>
+          </FormDialog>}
 
           <h3>Historial de valoraciones</h3>
 

@@ -1,0 +1,31 @@
+.workspace .form-dialog {
+  box-sizing: border-box; width: min(560px, calc(100vw - 32px));
+  max-height: calc(100dvh - 40px); overflow-y: auto;
+  margin: auto; padding: 28px; border: 1px solid #e0e6ee;
+  border-radius: 20px; color: #172b36; background: #fff;
+  box-shadow: 0 24px 80px #0003;
+}
+.form-dialog::backdrop { background: #111820a6; }
+.form-dialog .form-dialog-heading { display: flex; align-items: flex-start; gap: 16px; }
+.form-dialog .form-dialog-heading > div { flex: 1; min-width: 0; }
+.form-dialog h2 { margin: 0 0 8px; font-size: 22px; }
+.form-dialog p { overflow-wrap: anywhere; line-height: 1.6; }
+.form-dialog .form-dialog-heading p { color: #526277; margin: 0; }
+.workspace .form-dialog .form-dialog-close { min-width: 44px; min-height: 44px; padding: 4px; font-size: 26px; }
+.workspace .form-dialog form { margin-top: 24px; }
+.workspace .form-dialog fieldset { display: grid; gap: 16px; padding: 0; border: 0; min-width: 0; }
+.workspace .form-dialog label { display: grid; gap: 8px; font-weight: 600; margin: 0; }
+.workspace .form-dialog input, .workspace .form-dialog select {
+  width: 100%; min-width: 0; box-sizing: border-box; font: inherit;
+  padding: 12px; border: 1px solid #bbc7d4; border-radius: 9px;
+  background: white; color: #172b36;
+}
+.workspace .form-dialog button { min-height: 44px; }
+.form-dialog .form-dialog-footer { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 20px; }
+.form-dialog small { color: #526277; line-height: 1.5; }
+.form-dialog .assignment-summary { padding: 14px; background: #f7f8fa; border-radius: 10px; }
+.form-dialog :focus-visible { outline: 3px solid #856400; outline-offset: 3px; }
+@media (max-width: 600px) {
+  .workspace .form-dialog { width: calc(100vw - 20px); max-height: calc(100dvh - 20px); padding: 20px; }
+  .workspace .form-dialog input, .workspace .form-dialog select { font-size: 16px; }
+}

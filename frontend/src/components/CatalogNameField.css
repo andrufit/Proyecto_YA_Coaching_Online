@@ -1,0 +1,10 @@
+.catalog-name-field { min-width: 0; padding: 16px; margin-bottom: 18px; border: 1px solid #e0d6b6; border-radius: 12px; background: #fffdf7; }
+.catalog-selectors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.workspace .form-dialog .catalog-name-field label { margin-bottom: 14px; }
+.workspace .form-dialog .catalog-name-field select { min-height: 46px; text-overflow: ellipsis; }
+.catalog-name-field small { display: block; line-height: 1.6; }
+.nutrition-grid > .catalog-name-field { grid-column: 1 / -1; }
+@media (max-width: 640px) {
+  .catalog-selectors { grid-template-columns: 1fr; gap: 0; }
+  .catalog-name-field { padding: 12px; }
+}
