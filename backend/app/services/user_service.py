@@ -1,3 +1,5 @@
+import secrets
+
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -8,6 +10,10 @@ from app.core.security import (
 )
 from app.models.user import User
 from app.schemas.user import UserCreate
+
+
+# Compute once per worker, with the same password hasher as real accounts.
+_DUMMY_PASSWORD_HASH = hash_password(secrets.token_urlsafe(32))
 
 
 class UserAlreadyExistsError(Exception):
@@ -78,16 +84,9 @@ def authenticate_user(
 ) -> User | None:
     user = get_user_by_email(db, email)
 
-    if user is None:
-        return None
-
-    if not user.is_active:
-        return None
-
-    if not verify_password(
-        password,
-        user.hashed_password,
-    ):
+    candidate_hash = user.hashed_password if user is not None else _DUMMY_PASSWORD_HASH
+    matches = verify_password(password, candidate_hash)
+    if user is None or not user.is_active or not matches:
         return None
 
     return user

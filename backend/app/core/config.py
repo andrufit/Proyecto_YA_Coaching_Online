@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import AnyHttpUrl, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -12,6 +12,27 @@ class Settings(BaseSettings):
 
     database_url: str
     frontend_url: str = "http://localhost:5173"
+    cors_extra_origins: str = ""
+
+    @property
+    def browser_origins(self) -> list[str]:
+        """Explicit browser origins, including the frontend used in email links."""
+        origins = []
+        for raw in [self.frontend_url, *self.cors_extra_origins.split(",")]:
+            value = raw.strip()
+            if not value:
+                continue
+            url = AnyHttpUrl(value)
+            if (
+                not url.host or "*" in url.host or url.username or url.password
+                or url.query is not None or url.fragment is not None
+                or url.path not in (None, "/")
+            ):
+                raise ValueError("Configura el origen del frontend con esquema, dominio y puerto opcional.")
+            origin = str(url).rstrip("/")
+            if origin not in origins:
+                origins.append(origin)
+        return origins
 
     jwt_secret_key: str = Field(min_length=32)
     jwt_algorithm: str = "HS256"
